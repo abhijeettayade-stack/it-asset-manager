@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Asset Manager</title>
+<style>
+:root{
+  --blue:#1a56db;--blue-lt:#e8f0fe;--blue-dk:#1140a1;
+  --green:#057a55;--green-lt:#def7ec;
+  --amber:#92400e;--amber-lt:#fef3c7;
+  --red:#9b1c1c;--red-lt:#fde8e8;
+  --purple:#5521b5;--purple-lt:#edebfe;
+  --pink:#99154b;--pink-lt:#fce8f3;
+  --teal:#065f46;--teal-lt:#d1fae5;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;
+  --g400:#9ca3af;--g500:#6b7280;--g600:#4b5563;--g700:#374151;
+  --g800:#1f2937;--g900:#111827;--white:#fff;
+  --r:8px;--rl:12px;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;background:var(--g50);color:var(--g800);min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:228px;background:var(--g900);display:flex;flex-direction:column;flex-shrink:0;}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-logo{display:flex;align-items:center;gap:10px;}
+.sb-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.sb-name{font-size:14px;font-weight:700;color:#fff;line-height:1.2;}
+.sb-ver{font-size:11px;color:var(--g500);}
+.sb-nav{padding:10px 8px;flex:1;}
+.sb-section{font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--g500);padding:10px 12px 4px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;color:var(--g400);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:1px;user-select:none;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:var(--blue);color:#fff;}
+.ni{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.sb-foot{padding:13px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:var(--g500);text-align:center;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{background:var(--white);border-bottom:1px solid var(--g200);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.tb-title{font-size:17px;font-weight:700;color:var(--g900);}
+.tb-sub{font-size:12px;color:var(--g500);margin-top:1px;}
+.tb-actions{display:flex;gap:8px;align-items:center;}
+.content{flex:1;padding:22px 24px;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+
+/* SETUP BANNER */
+.setup-banner{background:linear-gradient(135deg,#1a56db,#5521b5);color:#fff;border-radius:var(--rl);padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;}
+.setup-banner .si{font-size:28px;flex-shrink:0;}
+.setup-banner h3{font-size:15px;font-weight:700;margin-bottom:6px;}
+.setup-banner p{font-size:13px;opacity:.88;line-height:1.5;margin-bottom:10px;}
+.setup-banner input{width:100%;padding:8px 12px;border-radius:var(--r);border:none;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;}
+.setup-banner .btn-save{background:#fff;color:var(--blue);font-weight:700;padding:8px 18px;border-radius:var(--r);border:none;cursor:pointer;font-size:13px;font-family:inherit;}
+.setup-banner .btn-save:hover{background:var(--g100);}
+.url-status{font-size:12px;margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.15);}
+
+/* LOADING OVERLAY */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{font-size:14px;color:var(--g600);font-weight:500;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px;margin-bottom:20px;}
+.sc{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--sh);}
+.sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-bottom:7px;}
+.sc-val{font-size:26px;font-weight:700;line-height:1;}
+.sc-sub{font-size:11px;color:var(--g400);margin-top:4px;}
+.cv-blue{color:var(--blue);}.cv-green{color:var(--green);}.cv-amber{color:var(--amber);}
+.cv-red{color:var(--red);}.cv-purple{color:var(--purple);}.cv-teal{color:var(--teal);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;font-family:inherit;}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue);}.btn-p:hover{background:var(--blue-dk);}
+.btn-s{background:var(--white);color:var(--g700);border-color:var(--g300);}.btn-s:hover{background:var(--g50);}
+.btn-d{background:var(--white);color:var(--red);border-color:var(--g300);}.btn-d:hover{background:var(--red-lt);border-color:#fca5a5;}
+.btn-sm{padding:5px 9px;font-size:12px;}.btn-ic{padding:5px 6px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* PANEL */
+.panel{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden;margin-bottom:18px;}
+.panel-hdr{padding:12px 18px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.panel-title{font-size:14px;font-weight:700;color:var(--g900);}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.sw{position:relative;}
+.sw input{padding:6px 9px 6px 28px;border:1px solid var(--g300);border-radius:var(--r);font-size:13px;width:185px;background:var(--g50);outline:none;font-family:inherit;}
+.sw input:focus{border-color:var(--blue);background:var(--white);}
+.sw::before{content:'🔍';position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;}
+select.fil{padding:6px 9px;border:1px solid var(--g300);border-radius:var(--r);font-size:13px;background:var(--white);color:var(--g700);outline:none;cursor:pointer;font-family:inherit;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:9px 13px;background:var(--g50);border-bottom:1px solid var(--g200);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g500);white-space:nowrap;}
+td{padding:9px 13px;border-bottom:1px solid var(--g100);color:var(--g700);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--g50);}
+.aid{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;}
+.aid:hover{text-decoration:underline;}
+.aser{font-family:'Courier New',monospace;font-size:11px;color:var(--g500);}
+.tda{display:flex;gap:4px;}
+.no-data{text-align:center;padding:42px 20px;color:var(--g400);}
+.nd-icon{font-size:34px;margin-bottom:8px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.b-active{background:var(--green-lt);color:var(--green);}
+.b-inactive{background:var(--g100);color:var(--g600);}
+.b-repair{background:var(--amber-lt);color:var(--amber);}
+.b-retired{background:var(--red-lt);color:var(--red);}
+.b-laptop{background:var(--blue-lt);color:var(--blue-dk);}
+.b-desktop{background:var(--purple-lt);color:var(--purple);}
+.b-printer{background:var(--pink-lt);color:var(--pink);}
+.b-unit{background:#ede9fe;color:#4c1d95;}
+.b-dept{background:var(--teal-lt);color:var(--teal);}
+
+/* MODAL */
+.modal-bd{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:28px 14px;overflow-y:auto;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--white);border-radius:var(--rl);width:100%;max-width:650px;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.modal-sm{max-width:440px;}
+.modal-hdr{padding:16px 22px 12px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:15px;font-weight:700;}
+.mcl{background:none;border:none;font-size:18px;cursor:pointer;color:var(--g400);padding:2px 6px;border-radius:4px;}
+.mcl:hover{background:var(--g100);color:var(--g700);}
+.modal-body{padding:18px 22px;}
+.modal-foot{padding:12px 22px;border-top:1px solid var(--g100);display:flex;justify-content:flex-end;gap:8px;}
+
+/* FORM */
+.fsec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin:14px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--g100);}
+.fsec:first-child{margin-top:0;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.ffall{grid-column:1/-1;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:12px;font-weight:600;color:var(--g600);}
+.fg .req{color:var(--red);margin-left:2px;}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid var(--g300);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--white);color:var(--g800);outline:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+.fg textarea{resize:vertical;min-height:66px;}
+.fg input[readonly]{background:var(--g50);color:var(--g600);cursor:not-allowed;}
+
+/* DRAWER */
+.drw-bd{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:none;}
+.drw-bd.open{display:block;}
+.drw{position:fixed;right:0;top:0;bottom:0;width:400px;background:var(--white);box-shadow:-4px 0 24px rgba(0,0,0,.13);z-index:901;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto;display:flex;flex-direction:column;}
+.drw.open{transform:translateX(0);}
+.drw-hdr{padding:18px 22px;border-bottom:1px solid var(--g100);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
+.drw-ttl{font-size:16px;font-weight:700;margin-bottom:5px;}
+.drw-bdg{display:flex;gap:6px;flex-wrap:wrap;}
+.drw-body{padding:18px 22px;flex:1;}
+.drw-sec{margin-bottom:18px;}
+.drw-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--g100);}
+.drw-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--g50);}
+.drw-row:last-child{border-bottom:none;}
+.dk{color:var(--g500);}.dv{font-weight:500;color:var(--g900);text-align:right;max-width:58%;word-break:break-word;}
+
+/* LOG */
+.log-list{padding:4px 18px;}
+.log-entry{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);}
+.log-entry:last-child{border-bottom:none;}
+.ldot-col{display:flex;flex-direction:column;align-items:center;padding-top:3px;}
+.ldot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex-shrink:0;}
+.lline{width:1px;background:var(--g200);flex:1;margin-top:4px;}
+.log-entry:last-child .lline{display:none;}
+.lts{font-size:11px;color:var(--g400);margin-bottom:2px;}
+.lmsg{font-size:13px;color:var(--g700);}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--g900);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.15);opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;max-width:320px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#065f46;}
+.toast.err{background:var(--red-lt);color:var(--red);border:1px solid #fca5a5;}
+
+@media(max-width:700px){
+  .sidebar{width:52px;}
+  .sb-name,.sb-ver,.nav-item span:not(.ni),.sb-section,.sb-foot{display:none;}
+  .nav-item{justify-content:center;padding:10px;}
+  .content{padding:14px;}
+  .fg2,.fg3{grid-template-columns:1fr;}
+  .drw{width:100%;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <div class="sb-icon">💻</div>
+      <div><div class="sb-name">IT Asset Manager</div><div class="sb-ver">v3.0 — Sheets DB</div></div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <div class="nav-item active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ni">📊</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="nav('inventory')" id="nav-inventory"><span class="ni">🖥️</span><span>Inventory</span></div>
+    <div class="sb-section">Masters</div>
+    <div class="nav-item" onclick="nav('units')" id="nav-units"><span class="ni">🏢</span><span>Units</span></div>
+    <div class="nav-item" onclick="nav('depts')" id="nav-depts"><span class="ni">📂</span><span>Departments</span></div>
+    <div class="nav-item" onclick="nav('users')" id="nav-users"><span class="ni">👥</span><span>Users</span></div>
+    <div class="sb-section">System</div>
+    <div class="nav-item" onclick="nav('log')" id="nav-log"><span class="ni">📋</span><span>Activity Log</span></div>
+  </nav>
+  <div class="sb-foot">© 2024 IT Dept</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div><div class="tb-title" id="pg-title">Dashboard</div><div class="tb-sub" id="pg-sub">Overview of all IT assets</div></div>
+    <div class="tb-actions">
+      <button class="btn btn-s btn-sm" onclick="exportCSV()">⬇️ Export CSV</button>
+      <button class="btn btn-s btn-sm" onclick="refreshAll()">🔄 Refresh</button>
+      <button class="btn btn-p btn-sm" onclick="openAddAsset()">+ Add Asset</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- SETUP BANNER (shown until URL is configured) -->
+    <div class="setup-banner" id="setup-banner">
+      <div class="si">⚙️</div>
+      <div style="flex:1">
+        <h3>Connect to Google Sheets — One-time Setup</h3>
+        <p>Paste your Google Apps Script Web App URL below to connect this app to your Google Sheet database. Follow the setup guide to get this URL.</p>
+        <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+        <br>
+        <button class="btn-save" onclick="saveApiUrl()">💾 Save & Connect</button>
+        <div class="url-status" id="url-status" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row" id="stats-row"><div class="sc"><div class="sc-label">Loading…</div><div class="sc-val cv-blue">—</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+        <div class="panel"><div class="panel-hdr"><span class="panel-title">By type</span></div><div style="padding:14px" id="ch-type"><div style="color:var(--g400);font-size:13px">Loading…</div></div></div>
+        <div class="panel"><div class="panel-hdr"><span class="panel-title">By status</span></div><div style="padding:14px" id="ch-status"><div style="color:var(--g400);font-size:13px">Loading…</div></div></div>
+      </div>
+      <div class="panel"><div class="panel-hdr"><span class="panel-title">By unit</span></div><div style="padding:14px" id="ch-unit"></div></div>
+      <div class="panel"><div class="panel-hdr"><span class="panel-title">By department</span></div><div style="padding:14px" id="ch-dept"></div></div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">All Assets</span>
+          <div class="toolbar">
+            <div class="sw"><input type="text" id="inv-q" placeholder="Search…" oninput="renderInv()"></div>
+            <select class="fil" id="inv-type" onchange="renderInv()"><option value="">All types</option><option>Laptop</option><option>Desktop</option><option>Printer</option></select>
+            <select class="fil" id="inv-unit" onchange="invUnitChange()"><option value="">All units</option></select>
+            <select class="fil" id="inv-dept" onchange="renderInv()"><option value="">All depts</option></select>
+            <select class="fil" id="inv-status" onchange="renderInv()"><option value="">All statuses</option><option>Active</option><option>Inactive</option><option>In repair</option><option>Retired</option></select>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Asset ID</th><th>Type</th><th>Brand / Model</th><th>Serial No.</th><th>Assigned To</th><th>Unit</th><th>Department</th><th>Status</th><th>Purchase</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+          <div id="inv-empty" class="no-data" style="display:none"><div class="nd-icon">📭</div><div>No assets found.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNITS -->
+    <div class="page" id="page-units">
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Units Master</span><button class="btn btn-p btn-sm" onclick="openAddUnit()">+ Add Unit</button></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Code</th><th>Unit Name</th><th>Description</th><th>Departments</th><th>Assets</th><th>Actions</th></tr></thead>
+            <tbody id="units-tbody"></tbody>
+          </table>
+          <div id="units-empty" class="no-data" style="display:none"><div class="nd-icon">🏢</div><div>No units added yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPARTMENTS -->
+    <div class="page" id="page-depts">
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Departments Master</span><button class="btn btn-p btn-sm" onclick="openAddDept()">+ Add Department</button></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Code</th><th>Department</th><th>Unit</th><th>Description</th><th>Assets</th><th>Users</th><th>Actions</th></tr></thead>
+            <tbody id="depts-tbody"></tbody>
+          </table>
+          <div id="depts-empty" class="no-data" style="display:none"><div class="nd-icon">📂</div><div>No departments added yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Users</span>
+          <div class="toolbar">
+            <div class="sw"><input type="text" id="usr-q" placeholder="Search…" oninput="renderUsers()"></div>
+            <select class="fil" id="usr-unit" onchange="usrUnitChange()"><option value="">All units</option></select>
+            <select class="fil" id="usr-dept" onchange="renderUsers()"><option value="">All depts</option></select>
+            <button class="btn btn-p btn-sm" onclick="openAddUser()">+ Add User</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Name</th><th>Emp ID</th><th>Email</th><th>Unit</th><th>Department</th><th>Phone</th><th>Assets</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+          <div id="users-empty" class="no-data" style="display:none"><div class="nd-icon">👤</div><div>No users yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="page" id="page-log">
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Activity Log</span><button class="btn btn-s btn-sm" onclick="clearLog()">🗑 Clear</button></div>
+        <div class="log-list" id="log-list"></div>
+        <div id="log-empty" class="no-data" style="display:none"><div class="nd-icon">📋</div><div>No activity yet.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loading-msg">Loading data…</div>
+</div>
+
+<!-- ===== ASSET MODAL ===== -->
+<div class="modal-bd" id="mod-asset">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr"><h3 id="mod-asset-title">Add New Asset</h3><button class="mcl" onclick="closeModal('mod-asset')">✕</button></div>
+  <div class="modal-body">
+    <div class="fsec">Identification</div>
+    <div class="fg2">
+      <div class="fg"><label>Asset ID</label><input id="fa-id" readonly></div>
+      <div class="fg"><label>Asset Type <span class="req">*</span></label><select id="fa-type"><option>Laptop</option><option>Desktop</option><option>Printer</option></select></div>
+      <div class="fg"><label>Brand <span class="req">*</span></label><input id="fa-brand" placeholder="Dell, HP, Lenovo…"></div>
+      <div class="fg"><label>Model <span class="req">*</span></label><input id="fa-model" placeholder="Latitude 5540"></div>
+      <div class="fg"><label>Serial Number <span class="req">*</span></label><input id="fa-serial" placeholder="SN1234567"></div>
+      <div class="fg"><label>Purchase Date</label><input type="date" id="fa-purchase"></div>
+      <div class="fg"><label>Warranty Expiry</label><input type="date" id="fa-warranty"></div>
+      <div class="fg"><label>Asset Tag</label><input id="fa-tag" placeholder="TAG-001"></div>
+    </div>
+    <div class="fsec">Specifications</div>
+    <div class="fg3">
+      <div class="fg"><label>OS / Firmware</label><input id="fa-os" placeholder="Windows 11 Pro"></div>
+      <div class="fg"><label>Processor</label><input id="fa-cpu" placeholder="Intel i5-12th Gen"></div>
+      <div class="fg"><label>RAM</label><input id="fa-ram" placeholder="8GB"></div>
+      <div class="fg"><label>Storage</label><input id="fa-storage" placeholder="256GB SSD"></div>
+      <div class="fg"><label>IP Address</label><input id="fa-ip" placeholder="192.168.1.x"></div>
+      <div class="fg"><label>MAC Address</label><input id="fa-mac" placeholder="00:1A:2B:3C:4D:5E"></div>
+    </div>
+    <div class="fsec">Assignment</div>
+    <div class="fg2">
+      <div class="fg"><label>Unit <span class="req">*</span></label><select id="fa-unit" onchange="assetUnitChange()"></select></div>
+      <div class="fg"><label>Department <span class="req">*</span></label><select id="fa-dept"></select></div>
+      <div class="fg"><label>Assigned User</label><select id="fa-user"><option value="">— Unassigned —</option></select></div>
+      <div class="fg"><label>Status <span class="req">*</span></label><select id="fa-status"><option>Active</option><option>Inactive</option><option>In repair</option><option>Retired</option></select></div>
+      <div class="fg"><label>Location</label><input id="fa-loc" placeholder="Floor 2, Room 204"></div>
+    </div>
+    <div class="fsec">Notes</div>
+    <div class="fg"><label>Additional notes</label><textarea id="fa-notes" placeholder="Any remarks…"></textarea></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-s" onclick="closeModal('mod-asset')">Cancel</button>
+    <button class="btn btn-p" id="asset-save-btn" onclick="saveAsset()">Save Asset</button>
+  </div>
+</div></div>
+
+<!-- ===== UNIT MODAL ===== -->
+<div class="modal-bd" id="mod-unit">
+<div class="modal modal-sm" onclick="event.stopPropagation()">
+  <div class="modal-hdr"><h3 id="mod-unit-title">Add Unit</h3><button class="mcl" onclick="closeModal('mod-unit')">✕</button></div>
+  <div class="modal-body">
+    <div class="fg2">
+      <div class="fg"><label>Unit Code <span class="req">*</span></label><input id="fu-code" placeholder="HO, BR1, WH…"></div>
+      <div class="fg"><label>Unit Name <span class="req">*</span></label><input id="fu-name" placeholder="Head Office"></div>
+      <div class="fg ffall"><label>Description</label><input id="fu-desc" placeholder="Brief description"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-s" onclick="closeModal('mod-unit')">Cancel</button>
+    <button class="btn btn-p" id="unit-save-btn" onclick="saveUnit()">Add Unit</button>
+  </div>
+</div></div>
+
+<!-- ===== DEPT MODAL ===== -->
+<div class="modal-bd" id="mod-dept">
+<div class="modal modal-sm" onclick="event.stopPropagation()">
+  <div class="modal-hdr"><h3 id="mod-dept-title">Add Department</h3><button class="mcl" onclick="closeModal('mod-dept')">✕</button></div>
+  <div class="modal-body">
+    <div class="fg2">
+      <div class="fg"><label>Dept Code <span class="req">*</span></label><input id="fd-code" placeholder="FIN, HR, ENG…"></div>
+      <div class="fg"><label>Department Name <span class="req">*</span></label><input id="fd-name" placeholder="Finance"></div>
+      <div class="fg"><label>Parent Unit <span class="req">*</span></label><select id="fd-unit"></select></div>
+      <div class="fg ffall"><label>Description</label><input id="fd-desc" placeholder="Brief description"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-s" onclick="closeModal('mod-dept')">Cancel</button>
+    <button class="btn btn-p" id="dept-save-btn" onclick="saveDept()">Add Department</button>
+  </div>
+</div></div>
+
+<!-- ===== USER MODAL ===== -->
+<div class="modal-bd" id="mod-user">
+<div class="modal modal-sm" onclick="event.stopPropagation()">
+  <div class="modal-hdr"><h3 id="mod-user-title">Add User</h3><button class="mcl" onclick="closeModal('mod-user')">✕</button></div>
+  <div class="modal-body">
+    <div class="fg2">
+      <div class="fg"><label>Full Name <span class="req">*</span></label><input id="fuu-name" placeholder="Priya Sharma"></div>
+      <div class="fg"><label>Employee ID</label><input id="fuu-empid" placeholder="EMP-001"></div>
+      <div class="fg"><label>Unit <span class="req">*</span></label><select id="fuu-unit" onchange="userUnitChange()"></select></div>
+      <div class="fg"><label>Department <span class="req">*</span></label><select id="fuu-dept"></select></div>
+      <div class="fg"><label>Email</label><input type="email" id="fuu-email" placeholder="priya@company.com"></div>
+      <div class="fg"><label>Phone</label><input id="fuu-phone" placeholder="+91 98765 43210"></div>
+      <div class="fg ffall"><label>Designation</label><input id="fuu-desig" placeholder="Software Engineer"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-s" onclick="closeModal('mod-user')">Cancel</button>
+    <button class="btn btn-p" id="user-save-btn" onclick="saveUser()">Add User</button>
+  </div>
+</div></div>
+
+<!-- DRAWER -->
+<div class="drw-bd" id="drw-bd" onclick="closeDrawer()"></div>
+<div class="drw" id="drw">
+  <div class="drw-hdr">
+    <div><div class="drw-ttl" id="drw-title"></div><div class="drw-bdg" id="drw-badges"></div></div>
+    <button class="mcl" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drw-body" id="drw-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+let API_URL = localStorage.getItem('itam_api_url') || '';
+
+// ============================================================
+// IN-MEMORY CACHE (loaded from Sheets)
+// ============================================================
+let DB = { assets:[], units:[], depts:[], users:[], log:[] };
+
+// ============================================================
+// API URL SETUP
+// ============================================================
+function saveApiUrl() {
+  const url = document.getElementById('api-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    showUrlStatus('❌ Invalid URL. Must start with https://script.google.com', 'red');
+    return;
+  }
+  API_URL = url;
+  localStorage.setItem('itam_api_url', url);
+  showUrlStatus('✅ URL saved! Connecting to Google Sheets…', 'green');
+  setTimeout(() => { document.getElementById('setup-banner').style.display = 'none'; refreshAll(); }, 1000);
+}
+function showUrlStatus(msg, color) {
+  const el = document.getElementById('url-status');
+  el.style.display = 'block';
+  el.textContent = msg;
+  el.style.background = color === 'green' ? 'rgba(5,122,85,.3)' : 'rgba(155,28,28,.3)';
+}
+function checkSetupBanner() {
+  const banner = document.getElementById('setup-banner');
+  if (API_URL) {
+    banner.style.display = 'none';
+    document.getElementById('api-url-input').value = API_URL;
+  }
+}
+
+// ============================================================
+// API CALLS
+// ============================================================
+function apiGet(params) {
+  const url = API_URL + '?' + new URLSearchParams(params).toString();
+  return fetch(url).then(r => r.json());
+}
+function apiPost(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+// ============================================================
+// LOAD ALL DATA
+// ============================================================
+async function refreshAll() {
+  if (!API_URL) return;
+  showLoading('Loading data from Google Sheets…');
+  try {
+    const res = await apiGet({ action: 'getAll' });
+    if (res.error) throw new Error(res.error);
+    DB.assets = res.assets || [];
+    DB.units  = res.units  || [];
+    DB.depts  = res.depts  || [];
+    DB.users  = res.users  || [];
+    DB.log    = res.log    || [];
+    renderCurrentPage();
+    toast('Data refreshed from Google Sheets.', 'ok');
+  } catch (err) {
+    toast('Error loading data: ' + err.message, 'err');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function getNextId(prefix, sheetName) {
+  const res = await apiPost({ action: 'getNextId', prefix, sheetName });
+  if (res.error) throw new Error(res.error);
+  return res.id;
+}
+
+// ============================================================
+// LOADING
+// ============================================================
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Please wait…';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, type='') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type==='ok'?'ok':type==='err'?'err':'');
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 280); }, 3500);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getUnit(id) { return DB.units.find(u=>u.id===id) || {name:'—',code:'—'}; }
+function getDept(id) { return DB.depts.find(d=>d.id===id) || {name:'—',code:'—'}; }
+function getUser(id) { return DB.users.find(u=>u.id===id) || null; }
+function unitName(id) { return getUnit(id).name; }
+function deptName(id) { return getDept(id).name; }
+function userName(id) { const u=getUser(id); return u?u.name:''; }
+function sBadge(s){return `<span class="badge ${{'Active':'b-active','Inactive':'b-inactive','In repair':'b-repair','Retired':'b-retired'}[s]||'b-inactive'}">${s}</span>`;}
+function tBadge(t){return `<span class="badge ${{'Laptop':'b-laptop','Desktop':'b-desktop','Printer':'b-printer'}[t]||''}">${t}</span>`;}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentPage = 'dashboard';
+const pageMeta = {
+  dashboard:{title:'Dashboard',sub:'Overview of all IT assets'},
+  inventory:{title:'Asset Inventory',sub:'All registered IT assets'},
+  units:{title:'Units Master',sub:'Manage organisational units'},
+  depts:{title:'Departments Master',sub:'Manage departments linked to units'},
+  users:{title:'Users',sub:'Staff and asset assignments'},
+  log:{title:'Activity Log',sub:'Full audit trail of all changes'},
+};
+function nav(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('pg-title').textContent=pageMeta[name].title;
+  document.getElementById('pg-sub').textContent=pageMeta[name].sub;
+  currentPage = name;
+  ({dashboard:renderDash,inventory:renderInv,units:renderUnitsPage,depts:renderDeptsPage,users:renderUsers,log:renderLog})[name]?.();
+}
+function renderCurrentPage() {
+  ({dashboard:renderDash,inventory:renderInv,units:renderUnitsPage,depts:renderDeptsPage,users:renderUsers,log:renderLog})[currentPage]?.();
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDash() {
+  const total=DB.assets.length, active=DB.assets.filter(a=>a.status==='Active').length;
+  const repair=DB.assets.filter(a=>a.status==='In repair').length, retired=DB.assets.filter(a=>a.status==='Retired').length;
+  const laps=DB.assets.filter(a=>a.type==='Laptop').length, desks=DB.assets.filter(a=>a.type==='Desktop').length, printers=DB.assets.filter(a=>a.type==='Printer').length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="sc"><div class="sc-label">Total Assets</div><div class="sc-val cv-blue">${total}</div><div class="sc-sub">registered</div></div>
+    <div class="sc"><div class="sc-label">Active</div><div class="sc-val cv-green">${active}</div><div class="sc-sub">in use</div></div>
+    <div class="sc"><div class="sc-label">Laptops</div><div class="sc-val cv-blue">${laps}</div></div>
+    <div class="sc"><div class="sc-label">Desktops</div><div class="sc-val cv-purple">${desks}</div></div>
+    <div class="sc"><div class="sc-label">In Repair</div><div class="sc-val cv-amber">${repair}</div></div>
+    <div class="sc"><div class="sc-label">Retired</div><div class="sc-val cv-red">${retired}</div></div>
+    <div class="sc"><div class="sc-label">Units</div><div class="sc-val cv-teal">${DB.units.length}</div></div>
+    <div class="sc"><div class="sc-label">Departments</div><div class="sc-val cv-teal">${DB.depts.length}</div></div>
+  `;
+  const bar=(items,colorFn)=>items.map(([lbl,cnt])=>{
+    const pct=total?Math.round(cnt/total*100):0;
+    return `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${lbl}</span><span style="font-weight:700">${cnt} <span style="color:var(--g400);font-weight:400">(${pct}%)</span></span></div>
+    <div style="height:7px;background:var(--g100);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${colorFn(lbl)};border-radius:4px"></div></div></div>`;
+  }).join('');
+  document.getElementById('ch-type').innerHTML=bar([['Laptop',laps],['Desktop',desks],['Printer',printers]],l=>({Laptop:'#1a56db',Desktop:'#7c3aed',Printer:'#be185d'}[l]||'#6b7280'));
+  document.getElementById('ch-status').innerHTML=bar([['Active',active],['Inactive',DB.assets.filter(a=>a.status==='Inactive').length],['In repair',repair],['Retired',retired]],l=>({'Active':'#057a55','Inactive':'#9ca3af','In repair':'#b45309','Retired':'#b91c1c'}[l]||'#6b7280'));
+  const byUnit=DB.units.map(u=>[u.name,DB.assets.filter(a=>a.unitId===u.id).length]).filter(([,c])=>c>0);
+  document.getElementById('ch-unit').innerHTML=byUnit.length?bar(byUnit,()=>'#1a56db'):'<div style="color:var(--g400);font-size:13px">No data</div>';
+  const byDept=DB.depts.map(d=>[d.name,DB.assets.filter(a=>a.deptId===d.id).length]).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ch-dept').innerHTML=byDept.length?bar(byDept,()=>'#065f46'):'<div style="color:var(--g400);font-size:13px">No data</div>';
+}
+
+// ============================================================
+// INVENTORY
+// ============================================================
+function populateInvFilters(){
+  document.getElementById('inv-unit').innerHTML='<option value="">All units</option>'+DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+}
+function invUnitChange(){
+  const uid=document.getElementById('inv-unit').value;
+  const depts=uid?DB.depts.filter(d=>d.unitId===uid):DB.depts;
+  document.getElementById('inv-dept').innerHTML='<option value="">All depts</option>'+depts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  renderInv();
+}
+function renderInv(){
+  populateInvFilters();
+  const q=(document.getElementById('inv-q').value||'').toLowerCase();
+  const ft=document.getElementById('inv-type').value, fu=document.getElementById('inv-unit').value;
+  const fd=document.getElementById('inv-dept').value, fs=document.getElementById('inv-status').value;
+  const list=DB.assets.filter(a=>{
+    if(ft&&a.type!==ft)return false;
+    if(fu&&a.unitId!==fu)return false;
+    if(fd&&a.deptId!==fd)return false;
+    if(fs&&a.status!==fs)return false;
+    if(q&&![a.id,a.brand,a.model,a.serial,userName(a.userId),unitName(a.unitId),deptName(a.deptId),a.tag].join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tb=document.getElementById('inv-tbody'), em=document.getElementById('inv-empty');
+  if(!list.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=list.map(a=>{
+    const un=userName(a.userId);
+    return `<tr>
+      <td><span class="aid" onclick="openDrawer('${a.id}')">${a.id}</span></td>
+      <td>${tBadge(a.type)}</td>
+      <td><div style="font-weight:600;color:var(--g900)">${a.brand} ${a.model}</div></td>
+      <td><span class="aser">${a.serial}</span></td>
+      <td>${un||'<span style="color:var(--g400)">Unassigned</span>'}</td>
+      <td><span class="badge b-unit">${unitName(a.unitId)}</span></td>
+      <td><span class="badge b-dept">${deptName(a.deptId)}</span></td>
+      <td>${sBadge(a.status)}</td>
+      <td style="font-size:12px;color:var(--g500)">${a.purchase||'—'}</td>
+      <td><div class="tda">
+        <button class="btn btn-s btn-sm btn-ic" onclick="openDrawer('${a.id}')">👁</button>
+        <button class="btn btn-s btn-sm btn-ic" onclick="openEditAsset('${a.id}')">✏️</button>
+        <button class="btn btn-d btn-sm btn-ic" onclick="deleteAsset('${a.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// ASSET ADD / EDIT
+// ============================================================
+let editAssetId = null;
+function populateAssetDropdowns(){
+  document.getElementById('fa-unit').innerHTML=DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  assetUnitChange();
+}
+function assetUnitChange(){
+  const uid=document.getElementById('fa-unit').value;
+  document.getElementById('fa-dept').innerHTML=DB.depts.filter(d=>d.unitId===uid).map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('fa-user').innerHTML='<option value="">— Unassigned —</option>'+DB.users.filter(u=>u.unitId===uid).map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+}
+async function openAddAsset(){
+  if(!API_URL){toast('Please configure the Google Sheets API URL first.','err');return;}
+  editAssetId=null;
+  showLoading('Generating Asset ID…');
+  try {
+    const nid = await getNextId('AST', 'Assets');
+    populateAssetDropdowns();
+    ['fa-brand','fa-model','fa-serial','fa-os','fa-cpu','fa-ram','fa-storage','fa-ip','fa-mac','fa-loc','fa-tag','fa-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fa-purchase').value=''; document.getElementById('fa-warranty').value='';
+    document.getElementById('fa-type').value='Laptop'; document.getElementById('fa-status').value='Active';
+    document.getElementById('fa-user').value='';
+    document.getElementById('fa-id').value=nid;
+    document.getElementById('mod-asset-title').textContent='Add New Asset';
+    document.getElementById('asset-save-btn').textContent='Save Asset';
+    openModal('mod-asset');
+  } catch(err){ toast('Error generating ID: '+err.message,'err'); }
+  finally{ hideLoading(); }
+}
+async function openEditAsset(id){
+  editAssetId=id;
+  const a=DB.assets.find(x=>x.id===id); if(!a)return;
+  populateAssetDropdowns();
+  document.getElementById('fa-id').value=a.id;
+  document.getElementById('fa-type').value=a.type;
+  document.getElementById('fa-brand').value=a.brand;
+  document.getElementById('fa-model').value=a.model;
+  document.getElementById('fa-serial').value=a.serial;
+  document.getElementById('fa-purchase').value=a.purchase||'';
+  document.getElementById('fa-warranty').value=a.warranty||'';
+  document.getElementById('fa-os').value=a.os||'';
+  document.getElementById('fa-cpu').value=a.cpu||'';
+  document.getElementById('fa-ram').value=a.ram||'';
+  document.getElementById('fa-storage').value=a.storage||'';
+  document.getElementById('fa-ip').value=a.ip||'';
+  document.getElementById('fa-mac').value=a.mac||'';
+  document.getElementById('fa-unit').value=a.unitId; assetUnitChange();
+  document.getElementById('fa-dept').value=a.deptId;
+  document.getElementById('fa-user').value=a.userId||'';
+  document.getElementById('fa-status').value=a.status;
+  document.getElementById('fa-loc').value=a.loc||'';
+  document.getElementById('fa-tag').value=a.tag||'';
+  document.getElementById('fa-notes').value=a.notes||'';
+  document.getElementById('mod-asset-title').textContent='Edit Asset — '+id;
+  document.getElementById('asset-save-btn').textContent='Update Asset';
+  openModal('mod-asset');
+}
+async function saveAsset(){
+  const g=id=>document.getElementById(id).value.trim();
+  const brand=g('fa-brand'),model=g('fa-model'),serial=g('fa-serial'),unitId=g('fa-unit'),deptId=g('fa-dept');
+  if(!brand||!model||!serial||!unitId||!deptId){toast('Brand, model, serial, unit and department are required.','err');return;}
+  const obj={id:g('fa-id'),type:g('fa-type'),brand,model,serial,purchase:g('fa-purchase'),warranty:g('fa-warranty'),
+    os:g('fa-os'),cpu:g('fa-cpu'),ram:g('fa-ram'),storage:g('fa-storage'),ip:g('fa-ip'),mac:g('fa-mac'),
+    userId:g('fa-user'),unitId,deptId,status:g('fa-status'),loc:g('fa-loc'),tag:g('fa-tag'),notes:g('fa-notes')};
+  closeModal('mod-asset');
+  showLoading(editAssetId?'Updating asset…':'Saving asset…');
+  try {
+    const action = editAssetId ? 'updateAsset' : 'addAsset';
+    const res = await apiPost({action, data:obj});
+    if(res.error) throw new Error(res.error);
+    // Log it
+    const logMsg = editAssetId
+      ? `Asset ${obj.id} updated (${obj.brand} ${obj.model})`
+      : `Asset ${obj.id} added: ${obj.type} — ${obj.brand} ${obj.model} (${unitName(unitId)}/${deptName(deptId)})`;
+    await apiPost({action:'addLog', msg:logMsg});
+    toast(editAssetId?'Asset updated.':'Asset added.','ok');
+    await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+async function deleteAsset(id){
+  if(!confirm(`Delete asset ${id}? This cannot be undone.`))return;
+  showLoading('Deleting asset…');
+  try {
+    const a=DB.assets.find(x=>x.id===id);
+    const res=await apiPost({action:'deleteAsset',id});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:`Asset ${id} deleted (${a?.brand} ${a?.model})`});
+    toast('Asset deleted.','ok');
+    await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+
+// ============================================================
+// UNITS
+// ============================================================
+let editUnitId=null;
+function renderUnitsPage(){
+  const tb=document.getElementById('units-tbody'),em=document.getElementById('units-empty');
+  if(!DB.units.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=DB.units.map(u=>{
+    const dc=DB.depts.filter(d=>d.unitId===u.id).length, ac=DB.assets.filter(a=>a.unitId===u.id).length;
+    return `<tr>
+      <td style="font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--g500);background:var(--g100);border-radius:4px;padding:3px 7px;display:inline-block">${u.code}</td>
+      <td style="font-weight:600;color:var(--g900)">${u.name}</td>
+      <td style="color:var(--g500);font-size:12px">${u.desc||'—'}</td>
+      <td><span style="font-weight:700;color:var(--purple)">${dc}</span></td>
+      <td><span style="font-weight:700;color:var(--blue)">${ac}</span></td>
+      <td><div class="tda"><button class="btn btn-s btn-sm btn-ic" onclick="openEditUnit('${u.id}')">✏️</button><button class="btn btn-d btn-sm btn-ic" onclick="deleteUnit('${u.id}')">🗑</button></div></td>
+    </tr>`;
+  }).join('');
+}
+function openAddUnit(){
+  editUnitId=null;
+  ['fu-code','fu-name','fu-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mod-unit-title').textContent='Add Unit';
+  document.getElementById('unit-save-btn').textContent='Add Unit';
+  openModal('mod-unit');
+}
+function openEditUnit(id){
+  editUnitId=id;
+  const u=getUnit(id);
+  document.getElementById('fu-code').value=u.code; document.getElementById('fu-name').value=u.name; document.getElementById('fu-desc').value=u.desc||'';
+  document.getElementById('mod-unit-title').textContent='Edit Unit';
+  document.getElementById('unit-save-btn').textContent='Update Unit';
+  openModal('mod-unit');
+}
+async function saveUnit(){
+  const code=document.getElementById('fu-code').value.trim().toUpperCase();
+  const name=document.getElementById('fu-name').value.trim();
+  const desc=document.getElementById('fu-desc').value.trim();
+  if(!code||!name){toast('Code and name are required.','err');return;}
+  closeModal('mod-unit');
+  showLoading(editUnitId?'Updating unit…':'Saving unit…');
+  try {
+    let obj, action, logMsg;
+    if(editUnitId){
+      obj={...getUnit(editUnitId),code,name,desc};
+      action='updateUnit'; logMsg=`Unit "${name}" updated.`;
+    } else {
+      const nid=await getNextId('UN','Units');
+      obj={id:nid,code,name,desc}; action='addUnit'; logMsg=`Unit "${name}" (${code}) added.`;
+    }
+    const res=await apiPost({action,data:obj});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:logMsg});
+    toast(editUnitId?'Unit updated.':'Unit added.','ok');
+    await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+async function deleteUnit(id){
+  const dc=DB.depts.filter(d=>d.unitId===id).length, ac=DB.assets.filter(a=>a.unitId===id).length;
+  if(dc>0||ac>0){toast(`Cannot delete — unit has ${dc} dept(s) and ${ac} asset(s).`,'err');return;}
+  const u=getUnit(id);
+  if(!confirm(`Delete unit "${u.name}"?`))return;
+  showLoading('Deleting unit…');
+  try {
+    const res=await apiPost({action:'deleteUnit',id});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:`Unit "${u.name}" deleted.`});
+    toast('Unit deleted.','ok'); await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+
+// ============================================================
+// DEPARTMENTS
+// ============================================================
+let editDeptId=null;
+function renderDeptsPage(){
+  const tb=document.getElementById('depts-tbody'),em=document.getElementById('depts-empty');
+  if(!DB.depts.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=DB.depts.map(d=>{
+    const u=getUnit(d.unitId), ac=DB.assets.filter(a=>a.deptId===d.id).length, uc=DB.users.filter(u=>u.deptId===d.id).length;
+    return `<tr>
+      <td style="font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--g500);background:var(--g100);border-radius:4px;padding:3px 7px;display:inline-block">${d.code}</td>
+      <td style="font-weight:600;color:var(--g900)">${d.name}</td>
+      <td><span class="badge b-unit">${u.name}</span></td>
+      <td style="color:var(--g500);font-size:12px">${d.desc||'—'}</td>
+      <td><span style="font-weight:700;color:var(--blue)">${ac}</span></td>
+      <td><span style="font-weight:700;color:var(--teal)">${uc}</span></td>
+      <td><div class="tda"><button class="btn btn-s btn-sm btn-ic" onclick="openEditDept('${d.id}')">✏️</button><button class="btn btn-d btn-sm btn-ic" onclick="deleteDept('${d.id}')">🗑</button></div></td>
+    </tr>`;
+  }).join('');
+}
+function openAddDept(){
+  editDeptId=null;
+  document.getElementById('fd-unit').innerHTML=DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  ['fd-code','fd-name','fd-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mod-dept-title').textContent='Add Department';
+  document.getElementById('dept-save-btn').textContent='Add Department';
+  openModal('mod-dept');
+}
+function openEditDept(id){
+  editDeptId=id;
+  const d=getDept(id);
+  document.getElementById('fd-unit').innerHTML=DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  document.getElementById('fd-code').value=d.code; document.getElementById('fd-name').value=d.name;
+  document.getElementById('fd-unit').value=d.unitId; document.getElementById('fd-desc').value=d.desc||'';
+  document.getElementById('mod-dept-title').textContent='Edit Department';
+  document.getElementById('dept-save-btn').textContent='Update Department';
+  openModal('mod-dept');
+}
+async function saveDept(){
+  const code=document.getElementById('fd-code').value.trim().toUpperCase();
+  const name=document.getElementById('fd-name').value.trim();
+  const unitId=document.getElementById('fd-unit').value;
+  const desc=document.getElementById('fd-desc').value.trim();
+  if(!code||!name||!unitId){toast('Code, name and unit are required.','err');return;}
+  closeModal('mod-dept');
+  showLoading(editDeptId?'Updating department…':'Saving department…');
+  try {
+    let obj, action, logMsg;
+    if(editDeptId){
+      obj={...getDept(editDeptId),code,name,unitId,desc}; action='updateDept'; logMsg=`Department "${name}" updated.`;
+    } else {
+      const nid=await getNextId('DP','Departments');
+      obj={id:nid,code,name,unitId,desc}; action='addDept'; logMsg=`Department "${name}" (${code}) added under ${unitName(unitId)}.`;
+    }
+    const res=await apiPost({action,data:obj});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:logMsg});
+    toast(editDeptId?'Department updated.':'Department added.','ok');
+    await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+async function deleteDept(id){
+  const ac=DB.assets.filter(a=>a.deptId===id).length, uc=DB.users.filter(u=>u.deptId===id).length;
+  if(ac>0||uc>0){toast(`Cannot delete — dept has ${ac} asset(s) and ${uc} user(s).`,'err');return;}
+  const d=getDept(id);
+  if(!confirm(`Delete department "${d.name}"?`))return;
+  showLoading('Deleting department…');
+  try {
+    const res=await apiPost({action:'deleteDept',id});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:`Department "${d.name}" deleted.`});
+    toast('Department deleted.','ok'); await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+
+// ============================================================
+// USERS
+// ============================================================
+let editUserId=null;
+function renderUsers(){
+  const q=(document.getElementById('usr-q').value||'').toLowerCase();
+  const fu=document.getElementById('usr-unit').value, fd=document.getElementById('usr-dept').value;
+  document.getElementById('usr-unit').innerHTML='<option value="">All units</option>'+DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  if(fu) document.getElementById('usr-unit').value=fu;
+  const list=DB.users.filter(u=>{
+    if(fu&&u.unitId!==fu)return false;
+    if(fd&&u.deptId!==fd)return false;
+    if(q&&![u.name,u.empid,u.email,u.desig].join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tb=document.getElementById('users-tbody'),em=document.getElementById('users-empty');
+  if(!list.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=list.map(u=>{
+    const ac=DB.assets.filter(a=>a.userId===u.id).length;
+    return `<tr>
+      <td><div style="font-weight:600">${u.name}</div><div style="font-size:11px;color:var(--g400)">${u.desig||''}</div></td>
+      <td style="font-family:'Courier New',monospace;font-size:12px">${u.empid||'—'}</td>
+      <td style="font-size:12px">${u.email||'—'}</td>
+      <td><span class="badge b-unit">${unitName(u.unitId)}</span></td>
+      <td><span class="badge b-dept">${deptName(u.deptId)}</span></td>
+      <td style="font-size:12px">${u.phone||'—'}</td>
+      <td><span style="font-weight:700;color:var(--blue)">${ac}</span></td>
+      <td><div class="tda"><button class="btn btn-s btn-sm btn-ic" onclick="openEditUser('${u.id}')">✏️</button><button class="btn btn-d btn-sm btn-ic" onclick="deleteUser('${u.id}')">🗑</button></div></td>
+    </tr>`;
+  }).join('');
+}
+function usrUnitChange(){
+  const uid=document.getElementById('usr-unit').value;
+  const depts=uid?DB.depts.filter(d=>d.unitId===uid):DB.depts;
+  document.getElementById('usr-dept').innerHTML='<option value="">All depts</option>'+depts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  renderUsers();
+}
+function openAddUser(){
+  editUserId=null;
+  document.getElementById('fuu-unit').innerHTML=DB.units.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  userUnitChange();
+  ['fuu-name','fuu-empid','fuu-email','fuu-phone','fuu-desig'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mod-user-title').textContent='Add User';
+  document.getElementById('user-save-btn').textContent='Add User';
+  openModal('mod-user');
+}
+function openEditUser(id){
+  editUserId=id;
+  const u=getUser(id); if(!u)return;
+  document.getElementById('fuu-unit').innerHTML=DB.units.map(un=>`<option value="${un.id}">${un.name}</option>`).join('');
+  document.getElementById('fuu-unit').value=u.unitId; userUnitChange();
+  document.getElementById('fuu-name').value=u.name; document.getElementById('fuu-empid').value=u.empid||'';
+  document.getElementById('fuu-email').value=u.email||''; document.getElementById('fuu-phone').value=u.phone||'';
+  document.getElementById('fuu-desig').value=u.desig||''; document.getElementById('fuu-dept').value=u.deptId;
+  document.getElementById('mod-user-title').textContent='Edit User';
+  document.getElementById('user-save-btn').textContent='Update User';
+  openModal('mod-user');
+}
+function userUnitChange(){
+  const uid=document.getElementById('fuu-unit').value;
+  document.getElementById('fuu-dept').innerHTML=DB.depts.filter(d=>d.unitId===uid).map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+}
+async function saveUser(){
+  const g=id=>document.getElementById(id).value.trim();
+  const name=g('fuu-name'),unitId=g('fuu-unit'),deptId=g('fuu-dept');
+  if(!name||!unitId||!deptId){toast('Name, unit and department are required.','err');return;}
+  closeModal('mod-user');
+  showLoading(editUserId?'Updating user…':'Saving user…');
+  try {
+    let obj, action, logMsg;
+    if(editUserId){
+      obj={...getUser(editUserId),name,empid:g('fuu-empid'),email:g('fuu-email'),phone:g('fuu-phone'),unitId,deptId,desig:g('fuu-desig')};
+      action='updateUser'; logMsg=`User "${name}" updated.`;
+    } else {
+      const nid=await getNextId('USR','Users');
+      obj={id:nid,name,empid:g('fuu-empid'),email:g('fuu-email'),phone:g('fuu-phone'),unitId,deptId,desig:g('fuu-desig')};
+      action='addUser'; logMsg=`User "${name}" added (${unitName(unitId)}/${deptName(deptId)}).`;
+    }
+    const res=await apiPost({action,data:obj});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:logMsg});
+    toast(editUserId?'User updated.':'User added.','ok');
+    await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+async function deleteUser(id){
+  const u=getUser(id); if(!u)return;
+  const ac=DB.assets.filter(a=>a.userId===id).length;
+  if(ac>0){toast(`Cannot delete "${u.name}" — ${ac} asset(s) assigned.`,'err');return;}
+  if(!confirm(`Delete user "${u.name}"?`))return;
+  showLoading('Deleting user…');
+  try {
+    const res=await apiPost({action:'deleteUser',id});
+    if(res.error) throw new Error(res.error);
+    await apiPost({action:'addLog',msg:`User "${u.name}" deleted.`});
+    toast('User deleted.','ok'); await refreshAll();
+  } catch(err){ toast('Error: '+err.message,'err'); hideLoading(); }
+}
+
+// ============================================================
+// LOG
+// ============================================================
+function renderLog(){
+  const ll=document.getElementById('log-list'),em=document.getElementById('log-empty');
+  const rev=[...DB.log].reverse();
+  if(!rev.length){ll.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  ll.innerHTML=rev.map(l=>`<div class="log-entry">
+    <div class="ldot-col"><div class="ldot"></div><div class="lline"></div></div>
+    <div><div class="lts">${l.timestamp||l.ts||''}</div><div class="lmsg">${l.message||l.msg||''}</div></div>
+  </div>`).join('');
+}
+async function clearLog(){
+  if(!confirm('Clear all log entries?'))return;
+  showLoading('Clearing log…');
+  try {
+    const res=await apiPost({action:'clearLog'});
+    if(res.error) throw new Error(res.error);
+    DB.log=[]; renderLog(); toast('Log cleared.','ok');
+  } catch(err){ toast('Error: '+err.message,'err'); }
+  finally{ hideLoading(); }
+}
+
+// ============================================================
+// DRAWER
+// ============================================================
+function openDrawer(id){
+  const a=DB.assets.find(x=>x.id===id); if(!a)return;
+  const un=userName(a.userId);
+  document.getElementById('drw-title').textContent=a.brand+' '+a.model;
+  document.getElementById('drw-badges').innerHTML=tBadge(a.type)+' '+sBadge(a.status);
+  const dr=(k,v)=>`<div class="drw-row"><span class="dk">${k}</span><span class="dv">${v||'—'}</span></div>`;
+  document.getElementById('drw-body').innerHTML=`
+    <div class="drw-sec"><div class="drw-sec-title">Identification</div>
+      ${dr('Asset ID',`<span style="font-family:'Courier New',monospace;font-weight:700">${a.id}</span>`)}
+      ${dr('Serial No.',a.serial)}${dr('Asset Tag',a.tag)}${dr('Purchase Date',a.purchase)}${dr('Warranty Expiry',a.warranty)}
+    </div>
+    <div class="drw-sec"><div class="drw-sec-title">Specifications</div>
+      ${dr('OS',a.os)}${dr('Processor',a.cpu)}${dr('RAM',a.ram)}${dr('Storage',a.storage)}${dr('IP Address',a.ip)}${dr('MAC Address',a.mac)}
+    </div>
+    <div class="drw-sec"><div class="drw-sec-title">Assignment</div>
+      ${dr('Assigned To',un||'Unassigned')}
+      ${dr('Unit','<span class="badge b-unit">'+unitName(a.unitId)+'</span>')}
+      ${dr('Department','<span class="badge b-dept">'+deptName(a.deptId)+'</span>')}
+      ${dr('Location',a.loc)}
+    </div>
+    ${a.notes?`<div class="drw-sec"><div class="drw-sec-title">Notes</div><div style="font-size:13px;color:var(--g600);line-height:1.6">${a.notes}</div></div>`:''}
+    <div style="margin-top:8px"><button class="btn btn-s" style="width:100%" onclick="closeDrawer();openEditAsset('${a.id}')">✏️ Edit Asset</button></div>
+  `;
+  document.getElementById('drw-bd').classList.add('open');
+  document.getElementById('drw').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drw-bd').classList.remove('open');
+  document.getElementById('drw').classList.remove('open');
+}
+
+// ============================================================
+// EXPORT CSV
+// ============================================================
+function exportCSV(){
+  const hdr=['Asset ID','Type','Brand','Model','Serial No','OS','Processor','RAM','Storage','IP','MAC','Assigned To','Unit Code','Unit','Dept Code','Department','Status','Purchase Date','Warranty','Location','Tag','Notes'];
+  const rows=DB.assets.map(a=>[a.id,a.type,a.brand,a.model,a.serial,a.os,a.cpu,a.ram,a.storage,a.ip,a.mac,
+    userName(a.userId),getUnit(a.unitId).code,unitName(a.unitId),getDept(a.deptId).code,deptName(a.deptId),
+    a.status,a.purchase,a.warranty,a.loc,a.tag,(a.notes||'').replace(/,/g,' ')
+  ].map(v=>`"${v||''}"`).join(','));
+  const csv=[hdr.join(','),...rows].join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const el=document.createElement('a');el.href=url;el.download='IT_Assets_'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+  URL.revokeObjectURL(url); toast('CSV exported.','ok');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+checkSetupBanner();
+if(API_URL) refreshAll();
+</script>
+</body>
+</html>
